@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace spotify_backstage
@@ -41,6 +42,12 @@ public:
     void setMid(double mid);
 
     void setTreble(double treble);
+
+    int getCurrentOutputDevice();
+
+    std::vector<std::pair<int, std::string>> getOutputDevices();
+
+    void setOutputDevice(int dev);
 
 private:
     class Impl;

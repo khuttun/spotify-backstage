@@ -29,10 +29,22 @@ public:
         LOG("SoundSystem thread finished");
     }
 
+    int getCurrentOutputDevice()
+    {
+        auto response = msg_queue_.request(PolyM::Msg(MSG_GET_CURRENT_OUTPUT_DEVICE));
+        return dynamic_cast<PolyM::DataMsg<int>&>(*response).getPayload();
+    }
+
     EqState getEqState()
     {
         auto response = msg_queue_.request(PolyM::Msg(MSG_GET_EQ_STATE));
         return dynamic_cast<PolyM::DataMsg<EqState>&>(*response).getPayload();
+    }
+
+    std::vector<std::pair<int, std::string>> getOutputDevices()
+    {
+        auto response = msg_queue_.request(PolyM::Msg(MSG_GET_OUTPUT_DEVICES));
+        return dynamic_cast<PolyM::DataMsg<std::vector<std::pair<int, std::string>>>&>(*response).getPayload();
     }
 
     void flush()
@@ -65,6 +77,11 @@ public:
         msg_queue_.put(PolyM::DataMsg<double>(MSG_SET_TREBLE, treble));
     }
 
+    void setOutputDevice(int dev)
+    {
+        msg_queue_.put(PolyM::DataMsg<int>(MSG_SET_OUTPUT_DEVICE, dev));
+    }
+
     bool write(int sample_rate, int num_channels, const int16_t* data, int num_frames)
     {
         auto response = msg_queue_.request(
@@ -77,6 +94,11 @@ private:
     enum MsgType
     {
         MSG_TERMINATE,
+        MSG_GET_CURRENT_OUTPUT_DEVICE,
+        MSG_GET_CURRENT_OUTPUT_DEVICE_RESPONSE,
+        MSG_GET_OUTPUT_DEVICES,
+        MSG_GET_OUTPUT_DEVICES_RESPONSE,
+        MSG_SET_OUTPUT_DEVICE,
         MSG_GET_EQ_STATE,
         MSG_GET_EQ_STATE_RESPONSE,
         MSG_SET_EQ_ON,
@@ -112,6 +134,15 @@ private:
             case MSG_TERMINATE:
                 keepRunning = false;
                 break;
+            case MSG_GET_CURRENT_OUTPUT_DEVICE:
+                handleGetCurrentOutputDevice(msg->getUniqueId());
+                break;
+            case MSG_GET_OUTPUT_DEVICES:
+                handleGetOutputDevices(msg->getUniqueId());
+                break;
+            case MSG_SET_OUTPUT_DEVICE:
+                handleSetOutputDevice(dynamic_cast<PolyM::DataMsg<int>&>(*msg).getPayload());
+                break;
             case MSG_GET_EQ_STATE:
                 handleGetEqState(msg->getUniqueId());
                 break;
@@ -140,6 +171,24 @@ private:
         }
 
         LOG("Shutting down SoundSystem");
+    }
+
+    void handleGetCurrentOutputDevice(PolyM::MsgUID reqUid)
+    {
+        msg_queue_.respondTo(reqUid, PolyM::DataMsg<int>(MSG_GET_CURRENT_OUTPUT_DEVICE_RESPONSE,
+            audio_dev_.getCurrentOutputDevice()));
+    }
+
+    void handleGetOutputDevices(PolyM::MsgUID reqUid)
+    {
+        msg_queue_.respondTo(reqUid,
+            PolyM::DataMsg<std::vector<std::pair<int, std::string>>>(
+                MSG_GET_OUTPUT_DEVICES_RESPONSE, audio_dev_.getOutputDevices()));
+    }
+
+    void handleSetOutputDevice(int dev)
+    {
+        audio_dev_.setOutputDevice(dev);
     }
 
     void handleGetEqState(PolyM::MsgUID reqUid)
@@ -211,9 +260,19 @@ SoundSystem::~SoundSystem()
 {
 }
 
+int SoundSystem::getCurrentOutputDevice()
+{
+    return impl_->getCurrentOutputDevice();
+}
+
 EqState SoundSystem::getEqState()
 {
     return impl_->getEqState();
+}
+
+std::vector<std::pair<int, std::string>> SoundSystem::getOutputDevices()
+{
+    return impl_->getOutputDevices();
 }
 
 void SoundSystem::flush()
@@ -244,6 +303,11 @@ void SoundSystem::setMid(double mid)
 void SoundSystem::setTreble(double treble)
 {
     impl_->setTreble(treble);
+}
+
+void SoundSystem::setOutputDevice(int dev)
+{
+    impl_->setOutputDevice(dev);
 }
 
 bool SoundSystem::write(int sample_rate, int num_channels, const int16_t* data, int num_frames)

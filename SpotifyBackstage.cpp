@@ -78,6 +78,21 @@ public:
         sounds_.setTreble(treble);
     }
 
+    int getCurrentOutputDevice()
+    {
+        return sounds_.getCurrentOutputDevice();
+    }
+
+    std::vector<std::pair<int, std::string>> getOutputDevices()
+    {
+        return sounds_.getOutputDevices();
+    }
+
+    void setOutputDevice(int dev)
+    {
+        sounds_.setOutputDevice(dev);
+    }
+
 private:
     SoundSystem sounds_;
     SpotifySession spotify_;
@@ -150,6 +165,21 @@ void SpotifyBackstage::setMid(double mid)
 void SpotifyBackstage::setTreble(double treble)
 {
     impl_->setTreble(treble);
+}
+
+int SpotifyBackstage::getCurrentOutputDevice()
+{
+    return impl_->getCurrentOutputDevice();
+}
+
+std::vector<std::pair<int, std::string>> SpotifyBackstage::getOutputDevices()
+{
+    return impl_->getOutputDevices();
+}
+
+void SpotifyBackstage::setOutputDevice(int dev)
+{
+    impl_->setOutputDevice(dev);
 }
 
 }

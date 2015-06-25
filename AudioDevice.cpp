@@ -49,7 +49,8 @@ public:
         std::vector<std::pair<int, std::string>> devices;
 
         for (int i = 0; i < Pa_GetDeviceCount(); ++i)
-            devices.push_back(std::make_pair(i, Pa_GetDeviceInfo(i)->name));
+            if (Pa_GetDeviceInfo(i)->maxOutputChannels > 0)
+                devices.push_back(std::make_pair(i, Pa_GetDeviceInfo(i)->name));
 
         return devices;
     }
