@@ -101,6 +101,13 @@ public:
 
     std::vector<Track> search(const std::string& query, int num_results, int offset)
     {
+        if (query.empty() || num_results < 1 || offset < 0)
+        {
+            LOG("Invalid search parameters: query = " << query << ", num_results = " <<
+                num_results << ", offset = " << offset);
+            return std::vector<Track>();
+        }
+
         auto response = msg_queue_.request(
             PolyM::DataMsg<SearchQuery>(MSG_SEARCH, query, num_results, offset));
         return dynamic_cast<PolyM::DataMsg<std::vector<Track>>&>(*response).getPayload();
